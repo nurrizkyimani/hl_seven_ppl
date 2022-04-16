@@ -8,8 +8,10 @@ from firebase_admin import firestore
 class Patient(BaseModel):
     name: str
     navigator: str
-    active: int = None
+    active: bool = False
+    last_contact: int
     description: str = None
+    app_list : List[str] = []
 
 
 class Appointment(BaseModel):
