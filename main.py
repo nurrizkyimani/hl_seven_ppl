@@ -7,7 +7,8 @@ from firebase_admin import firestore
 
 class Patient(BaseModel):
     name: str
-    active: bool = False
+    navigator: str
+    active: int = None
     description: str = None
 
 
@@ -15,13 +16,14 @@ class Appointment(BaseModel):
     status: str
     priority: int
     description: str
-    minutes: int
+    start: str
+    end: str
 
 
 app = FastAPI()
 
 # firebase credential
-cred = credentials.Certificate("path/to/scalable-ppl-hlseven-firebase.json")
+cred = credentials.Certificate("scalable-ppl-hlseven-firebase.json")
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
@@ -31,51 +33,49 @@ async def root():
     return {"message": "Hello fdfd "}
 
 
-# GET HOME
-@app.get("/home")
-async def home():
-    return {"message": "Hello home "}
-
 # GET patient
-
-
 @app.get("/patient")
 async def patients():
-    db.collection("patients").get()
-    return {"message": "Hello patient "}
+    result = db.collection(u"patients").get()
+    pat_l = []
+    for doc in result:
+        pat_l.append({"id": doc.id, **doc.to_dict()})
+    return {
+        "status": 201,
+        "message": pat_l}
 
-# GET patient JSON FORMAT
-
-
-@app.get("/patient/json")
-async def patients(patient: Patient):
-    db.collection("patients").get()
-    return {"patient": patient.dict()}
-
-
-# POST PATIENT NEW
-@app.post("/patient/new")
-async def patients():
-    return {"message": "Hello patients "}
 
 # POST PATIENT JSON
-
-
-@app.post("/patient/json")
+@app.post("/patient/new")
 async def patients(patient: Patient):
-    db.collection("patients").add(patient.dict())
-    return {"message": "Hello patients "}
+    res = db.collection("patients").add(patient.dict())
+    x = res
+
+    return {
+        "status": 201,
+        "time": x,
+        "message": "done"}
 
 
-# GET appointmetns
-@app.post("/appointment")
-async def appointments():
-
-    return {"message": "Hello appointment"}
-
-
-# GET appointmetns
-@app.get("/appointment/json")
+# POST appointmetns
+@app.post("/appointment/new")
 async def appointments(appointment: Appointment):
-    db.collection("appointments").add(appointment.dict())
-    return {"message": "Hello appointment"}
+    res = db.collection("appointments").add(appointment.dict())
+
+    return {
+        "status": 201,
+        "message": "done"}
+
+
+# GET appointmetns
+@app.get("/appointment")
+async def appointments():
+    apps = db.collection("appointments").get()
+    app_list = []
+    for app in apps:
+        app_list.append({"id": app.id, **app.to_dict()})
+
+    return {
+        "status": 201,
+        "message": app_list
+    }
