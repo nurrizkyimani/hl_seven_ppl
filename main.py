@@ -47,9 +47,8 @@ def get_all_patients():
         pat_l.append({"id": doc.id, **doc.to_dict()})
     return pat_l
 
+# DONE
 # post patient data to firebase based on Patient Model
-
-# WORKING
 
 
 def post_patient(patient: Patient):
@@ -66,7 +65,7 @@ def post_patient(patient: Patient):
     })
     return {"id": doc_ref.id, **patient.dict()}
 
-# GET patient
+# GET patient by id
 
 
 @app.get("/patient")
@@ -105,24 +104,25 @@ def post_appointment(appointment: Appointment):
     return {"id": doc_ref.id, **appointment.dict()}
 
 
-# POST appointmetn
+# update the patient list in patient doc with the id of the post appointment
+def update_patient_list(res_id, patient_id):
+    doc_ref = db.collection(u"patients").document(patient_id)
+    res_d = doc_ref.update({
+        u"app_list": firestore.ArrayUnion([res_id])
+    })
+
+    return res_d
+
+
 @app.post("/appointment/new")
 async def appointments(appointment: Appointment):
 
     # create appointment with id and know the start and the end
-    res = post_appointment(appointment)
+    app_res = post_appointment(appointment)
 
-    print(res.id)
+    res_d = update_patient_list(app_res["id"], appointment.patient_id)
 
-    # set the patient list in the patient document with the id of the appointment
-    # doc_ref = db.collection(u"patients").document(res.id)
-    # doc_ref.update({u'app_list': firestore.ArrayUnion([res["id"]])})
-
-    print(res)
-
-    return {
-        "status": 201,
-        "message": "done"}
+    return {"id": app_res["id"], **appointment.dict()}
 
 
 # create fucntion for get all appointments from firebase
