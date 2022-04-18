@@ -1,71 +1,17 @@
-import datetime
-from email import message
-from typing import List, Optional
-from firebase_admin import credentials
-import firebase_admin
+
 from fastapi import FastAPI
-from pydantic import BaseModel
-from firebase_admin import firestore
-
-
-class Patient(BaseModel):
-    name: str
-    navigator: str
-    active: bool = False
-    last_contact: Optional[str] = None
-    description: str = None
-    app_list: List[str] = []
-
-
-class Appointment(BaseModel):
-    patient_id: str
-    status: str
-    priority: int
-    description: str
-    start: str
-    end: str
-
+from model import Appointment, Patient
+from view import get_all_appointments, get_all_patients, post_appointment, post_patient, update_patient_list
 
 app = FastAPI()
 
-# firebase credential
-cred = credentials.Certificate("scalable-ppl-hlseven-firebase.json")
-firebase_admin.initialize_app(cred)
-db = firestore.client()
 
-
+# HOME
 @app.get("/")
 async def root():
     return {"message": "Hello fdfd "}
 
-
-# get all patients from firebase view;
-def get_all_patients():
-    result = db.collection(u"patients").get()
-    pat_l = []
-    for doc in result:
-        pat_l.append({"id": doc.id, **doc.to_dict()})
-    return pat_l
-
-# DONE
-# post patient data to firebase based on Patient Model
-
-
-def post_patient(patient: Patient):
-    doc_ref = db.collection(u"patients").document()
-
-    dt = datetime.datetime(2021, 12, 6, 15, 00, 10, 79060)
-    doc_ref.set({
-        u"name": patient.name,
-        u"navigator": patient.navigator,
-        u"active": patient.active,
-        u"last_contact": dt,
-        u"description": patient.description,
-        u"app_list": []
-    })
-    return {"id": doc_ref.id, **patient.dict()}
-
-# GET patient by id
+# GET ALL PATIENTS
 
 
 @app.get("/patient")
@@ -91,47 +37,16 @@ async def patients(patient: Patient):
 
 
 # POST function for appointment from the Appointment Model
-def post_appointment(appointment: Appointment):
-    doc_ref = db.collection(u"appointments").document()
-    doc_ref.set({
-        u"patient_id": appointment.patient_id,
-        u"status": appointment.status,
-        u"priority": appointment.priority,
-        u"description": appointment.description,
-        u"start": appointment.start,
-        u"end": appointment.end
-    })
-    return {"id": doc_ref.id, **appointment.dict()}
-
-
-# update the patient list in patient doc with the id of the post appointment
-def update_patient_list(res_id, patient_id):
-    doc_ref = db.collection(u"patients").document(patient_id)
-    res_d = doc_ref.update({
-        u"app_list": firestore.ArrayUnion([res_id])
-    })
-
-    return res_d
-
-
 @app.post("/appointment/new")
 async def appointments(appointment: Appointment):
 
     # create appointment with id and know the start and the end
     app_res = post_appointment(appointment)
 
+    # update patient list after posting the appointment to the firebase
     res_d = update_patient_list(app_res["id"], appointment.patient_id)
 
     return {"id": app_res["id"], **appointment.dict()}
-
-
-# create fucntion for get all appointments from firebase
-def get_all_appointments():
-    result = db.collection(u"appointments").get()
-    app_l = []
-    for doc in result:
-        app_l.append({"id": doc.id, **doc.to_dict()})
-    return app_l
 
 # GET appointmetns
 
