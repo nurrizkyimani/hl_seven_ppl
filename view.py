@@ -39,6 +39,8 @@ def post_patient(patient: Patient):
     })
     return {"id": doc_ref.id, **patient.dict()}
 
+# post appointment
+
 
 def post_appointment(appointment: Appointment):
     doc_ref = db.collection(u"appointments").document()
