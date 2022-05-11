@@ -46,10 +46,7 @@ here the endpoint is included as `view.py`
 ### Get all patients list
 * Endpoint: `/patient`
 * HTTP Method: `GET`
-* Request Body:
-```json
-
-  ```
+* Request Body: NONE
 
 * Response Body:
 ```json
@@ -89,10 +86,7 @@ here the endpoint is included as `view.py`
 ### Get all appointments
 * Endpoint: `/appointment`
 * HTTP Method: `GET`
-* Request Body:
-```json
-
-  ```
+* Request Body: NONE
 
 * Response Body:
 ```json 
